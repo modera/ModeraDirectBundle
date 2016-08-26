@@ -9,28 +9,28 @@ class Router
 {
     /**
      * The ExtDirect Request object.
-     * 
+     *
      * @var Modera\DirectBundle\Request
      */
     protected $request;
 
     /**
      * The ExtDirect Response object.
-     * 
+     *
      * @var Modera\DirectBundle\Response
      */
     protected $response;
 
     /**
      * The application container.
-     * 
+     *
      * @var Symfony\Component\DependencyInjection\Container
      */
     protected $container;
 
     /**
      * Initialize the router object.
-     * 
+     *
      * @param Container $container
      */
     public function __construct($container)
@@ -60,7 +60,7 @@ class Router
 
     /**
      * Dispatch a remote method call.
-     * 
+     *
      * @param Modera\DirectBundle\Router\Call $call
      *
      * @return mixed
@@ -103,7 +103,7 @@ class Router
 
     /**
      * Resolve the called controller from action.
-     * 
+     *
      * @param string $action
      *
      * @return <type>

@@ -13,7 +13,7 @@ class Api
 
     /**
      * The ExtDirect JSON API description.
-     * 
+     *
      * @var JSON
      */
     protected $api;

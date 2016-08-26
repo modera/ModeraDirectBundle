@@ -6,14 +6,14 @@ class ControllerApi
 {
     /**
      * Store the controller reflection object.
-     * 
+     *
      * @var \Reflection
      */
     protected $reflection;
 
     /**
      * The controller ExtDirect api.
-     * 
+     *
      * @var array
      */
     protected $api;
@@ -27,7 +27,7 @@ class ControllerApi
 
     /**
      * Initialize the object.
-     * 
+     *
      * @param \Symfony\Component\Container $container
      * @param string                       $controller
      */
@@ -59,7 +59,7 @@ class ControllerApi
 
     /**
      * Return the api.
-     * 
+     *
      * @return array
      */
     public function getApi()
@@ -69,7 +69,7 @@ class ControllerApi
 
     /**
      * Return the name of exposed direct Action.
-     * 
+     *
      * @return string
      */
     public function getActionName()

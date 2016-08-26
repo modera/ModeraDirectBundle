@@ -11,7 +11,7 @@ class DirectController extends Controller
 {
     /**
      * Generate the ExtDirect API.
-     * 
+     *
      * @return Response
      */
     public function getApiAction()

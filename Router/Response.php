@@ -6,21 +6,21 @@ class Response
 {
     /**
      * Call type to respond. Where values in ('form','single).
-     *   
+     *
      * @var string
      */
     protected $type;
 
     /**
      * Is upload request?
-     * 
+     *
      * @var bool
      */
     protected $isUpload = false;
 
     /**
      * Initialize the object setting it type.
-     * 
+     *
      * @param string $type
      * @param bool   $isUpload
      */
@@ -32,7 +32,7 @@ class Response
 
     /**
      * Encode the response into a valid json ExtDirect result.
-     * 
+     *
      * @param array $result
      *
      * @return string

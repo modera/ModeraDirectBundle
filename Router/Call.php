@@ -6,56 +6,56 @@ class Call
 {
     /**
      * The ExtDirect action called. With reference to Bundle via underscore '_'.
-     * 
+     *
      * @var string
      */
     protected $action;
 
     /**
      * The ExtDirect method called.
-     * 
+     *
      * @var string
      */
     protected $method;
 
     /**
      * The ExtDirect request type.
-     * 
+     *
      * @var string
      */
     protected $type;
 
     /**
      * The ExtDirect transaction id.
-     * 
+     *
      * @var int
      */
     protected $tid;
 
     /**
      * The ExtDirect call params.
-     * 
+     *
      * @var array
      */
     protected $data;
 
     /**
      * The ExtDirect request type. Where values in ('form','single').
-     * 
+     *
      * @var string
      */
     protected $callType;
 
     /**
      * The ExtDirect upload reference.
-     * 
+     *
      * @var bool
      */
     protected $upload;
 
     /**
      * Initialize an ExtDirect call.
-     * 
+     *
      * @param array  $call
      * @param string $type
      */
@@ -102,7 +102,7 @@ class Call
 
     /**
      * Return a result wrapper to ExtDirect method call.
-     * 
+     *
      * @param array $result
      *
      * @return array
@@ -120,7 +120,7 @@ class Call
 
     /**
      * Return an exception to ExtDirect call stack.
-     * 
+     *
      * @param \Exception $exception
      *
      * @return array
@@ -140,7 +140,7 @@ class Call
 
     /**
      * Initialize the call properties from a single call.
-     * 
+     *
      * @param array $call
      */
     private function initializeFromSingle($call)
@@ -154,7 +154,7 @@ class Call
 
     /**
      * Initialize the call properties from a form call.
-     * 
+     *
      * @param array $call
      */
     private function initializeFromForm($call)
