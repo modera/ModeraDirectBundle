@@ -4,36 +4,31 @@ namespace Modera\DirectBundle\Router;
 
 use Symfony\Component\DependencyInjection\ContainerAware;
 use Modera\DirectBundle\Api\ControllerApi;
+use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 
 class Router
 {
     /**
-     * The ExtDirect Request object.
-     *
-     * @var Modera\DirectBundle\Request
+     * @var \Modera\DirectBundle\Router\Request
      */
     protected $request;
 
     /**
-     * The ExtDirect Response object.
-     *
-     * @var Modera\DirectBundle\Response
+     * @var \Modera\DirectBundle\Router\Response
      */
     protected $response;
 
     /**
-     * The application container.
-     *
-     * @var Symfony\Component\DependencyInjection\Container
+     * @var Container
      */
     protected $container;
 
     /**
-     * Initialize the router object.
-     *
      * @param Container $container
      */
-    public function __construct($container)
+    public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
         $this->request = new Request($container->get('request'));
@@ -45,7 +40,7 @@ class Router
     /**
      * Do the ExtDirect routing processing.
      *
-     * @return JSON
+     * @return string
      */
     public function route()
     {
@@ -61,11 +56,11 @@ class Router
     /**
      * Dispatch a remote method call.
      *
-     * @param Modera\DirectBundle\Router\Call $call
+     * @param Call $call
      *
      * @return mixed
      */
-    private function dispatch($call)
+    private function dispatch(Call $call)
     {
         $api = new ControllerApi($this->container, $this->getControllerClass($call->getAction()));
 
@@ -74,7 +69,7 @@ class Router
         $accessType = $api->getMethodAccess($method);
 
         if (!is_callable(array($controller, $method))) {
-            //todo: throw an execption method not callable
+            //todo: throw an exception method not callable
             return false;
         } elseif ($this->defaultAccess == 'secure' && $accessType != 'anonymous') {
             if (!$this->session) {
@@ -90,11 +85,10 @@ class Router
 
         if (!isset($result)) {
             try {
-                //$result = call_user_func_array(array($controller, $method), $call->getData());
                 $result = $controller->$method($call->getData());
                 $result = $call->getResponse($result);
             } catch (\Exception $e) {
-                $result = $call->getException($e);
+                $result = $call->getException($e, $this->container->getParameter('kernel.environment'));
             }
         }
 
@@ -120,21 +114,23 @@ class Router
             }
 
             return $controller;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // todo: handle exception
+            throw $e;
         }
     }
 
     /**
      * Return the controller class name.
      *
-     * @param $action
+     * @param string $action
      */
     private function getControllerClass($action)
     {
         list($bundleName, $controllerName) = explode('_', $action);
         $bundleName .= 'Bundle';
 
+        /* @var BundleInterface $bundle */
         $bundle = $this->container->get('kernel')->getBundle($bundleName);
         $namespace = $bundle->getNamespace().'\\Controller';
 

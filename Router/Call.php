@@ -122,20 +122,29 @@ class Call
      * Return an exception to ExtDirect call stack.
      *
      * @param \Exception $exception
+     * @param string     $environment Since 2.56.0
      *
      * @return array
      */
-    public function getException($exception)
+    public function getException(\Exception $exception, $environment = 'dev')
     {
-        return array(
+        // https://docs.sencha.com/extjs/6.0.2/guides/backend_connectors/direct/specification.html
+        $response = array(
             'type' => 'exception',
-            'class' => get_class($exception),
             'tid' => $this->tid,
             'action' => $this->action,
             'method' => $this->method,
-            'message' => $exception->getMessage(),
-            'where' => $exception->getTraceAsString(),
         );
+
+        if (in_array($environment, ['test', 'dev'])) {
+            return array_merge($response, array(
+                'class' => get_class($exception),
+                'message' => $exception->getMessage(),
+                'where' => $exception->getTraceAsString(),
+            ));
+        } else {
+            return $response;
+        }
     }
 
     /**
