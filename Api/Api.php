@@ -2,12 +2,13 @@
 
 namespace Modera\DirectBundle\Api;
 
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+
 class Api
 {
     /**
-     * The application container.
-     *
-     * @var Symfony\Component\DependencyInjection\Container
+     * @var ContainerInterface
      */
     protected $container;
 
@@ -65,9 +66,12 @@ class Api
             }
         }
 
+        /* @var RequestStack $rs */
+        $rs = $this->container->get('request_stack');
+        $request = $rs->getCurrentRequest();
+
         return array(
-            'url' => $this->container->get('request')->getBaseUrl().
-                           $this->container->getParameter('direct.api.route_pattern'),
+            'url' => $request->getBaseUrl().$this->container->getParameter('direct.api.route_pattern'),
             'type' => $this->container->getParameter('direct.api.type'),
             'namespace' => $this->container->getParameter('direct.api.namespace'),
             'id' => $this->container->getParameter('direct.api.id'),

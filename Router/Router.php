@@ -2,10 +2,11 @@
 
 namespace Modera\DirectBundle\Router;
 
-use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Modera\DirectBundle\Api\ControllerApi;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 
 class Router
@@ -30,8 +31,11 @@ class Router
      */
     public function __construct(ContainerInterface $container)
     {
+        /* @var RequestStack $requestStack */
+        $requestStack = $container->get('request_stack');
+
         $this->container = $container;
-        $this->request = new Request($container->get('request'));
+        $this->request = new Request($requestStack->getCurrentRequest());
         $this->response = new Response($this->request->getCallType(), $this->request->isUpload());
         $this->defaultAccess = $container->getParameter('direct.api.default_access');
         $this->session = $this->container->get('session')->get($container->getParameter('direct.api.session_attribute'));
@@ -109,7 +113,7 @@ class Router
         try {
             $controller = new $class();
 
-            if ($controller instanceof ContainerAware) {
+            if ($controller instanceof ContainerAwareInterface) {
                 $controller->setContainer($this->container);
             }
 
