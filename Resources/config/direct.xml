@@ -6,6 +6,7 @@
 
     <parameters>
         <parameter key="direct.api.route_pattern">%modera_direct.routes_prefix%/route</parameter>
+        <parameter key="direct.api.enable_buffer">false</parameter>
         <parameter key="direct.api.type">remoting</parameter>
         <parameter key="direct.api.namespace">Actions</parameter>
         <parameter key="direct.api.id">API</parameter>
