@@ -2,6 +2,8 @@
 
 namespace Modera\DirectBundle\Router;
 
+use Modera\DirectBundle\Exception\CallException;
+
 class Call
 {
     /**
@@ -135,6 +137,18 @@ class Call
             'action' => $this->action,
             'method' => $this->method,
         );
+
+        if ($exception instanceof CallException) {
+            if (null !== $exception->getMessage()) {
+                $response = array_merge($response, array(
+                    'message' => $exception->getMessage(),
+                ));
+            }
+
+            if ($exception->getPrevious()) {
+                $exception = $exception->getPrevious();
+            }
+        }
 
         if (in_array($environment, ['test', 'dev'])) {
             return array_merge($response, array(
