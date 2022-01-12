@@ -17,8 +17,8 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('modera_direct');
+        $treeBuilder = new TreeBuilder('modera_direct');
+        $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
             ->children()

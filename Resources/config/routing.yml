@@ -1,9 +1,13 @@
+
 api:
-    path:  '%modera_direct.routes_prefix%/api.js'
-    defaults: { _controller: ModeraDirectBundle:Direct:getApi }
+    path: '%modera_direct.routes_prefix%/api.js'
+    defaults:
+        _controller: Modera\DirectBundle\Controller\DirectController::getApiAction
 remoting:
-    path:  '%modera_direct.routes_prefix%/remoting.js'
-    defaults: { _controller: ModeraDirectBundle:Direct:getRemoting }
+    path: '%modera_direct.routes_prefix%/remoting.js'
+    defaults:
+        _controller: Modera\DirectBundle\Controller\DirectController::getRemotingAction
 route:
     path: '%modera_direct.routes_prefix%/route'
-    defaults: { _controller: ModeraDirectBundle:Direct:route }
+    defaults:
+        _controller: Modera\DirectBundle\Controller\DirectController::routeAction

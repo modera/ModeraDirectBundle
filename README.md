@@ -1,36 +1,38 @@
 # ModeraDirectBundle
 
-[![StyleCI](https://styleci.io/repos/29132402/shield)](https://styleci.io/repos/29132402)
-
 ModeraDirectBundle is an implementation of ExtDirect specification to Symfony framework.
 
 ## Installation
 
-### Step 1: Update your vendors by running
+### Step 1: Download the Bundle
 
 ``` bash
-$ php composer.phar require modera/direct-bundle:dev-master
+composer require modera/direct-bundle:4.x-dev
 ```
 
-### Step 2: Enable the bundle
+This command requires you to have Composer installed globally, as explained
+in the [installation chapter](https://getcomposer.org/doc/00-intro.md) of the Composer documentation.
+
+### Step 2: Enable the Bundle
+
+This bundle should be automatically enabled by [Flex](https://symfony.com/doc/current/setup/flex.html).
+In case you don't use Flex, you'll need to manually enable the bundle by
+adding the following line in the `config/bundles.php` file of your project:
 
 ``` php
 <?php
-// app/AppKernel.php
+// config/bundles.php
 
-public function registerBundles()
-{
-    $bundles = array(
-        // ...
-        new Modera\DirectBundle\ModeraDirectBundle(),
-    );
-}
+return [
+    // ...
+    Modera\DirectBundle\ModeraDirectBundle::class => ['all' => true],
+];
 ```
 
 ### Step 3: Add routing
 
 ``` yaml
-// app/config/routing.yml
+// config/routes.yaml
 
 direct:
     resource: "@ModeraDirectBundle/Resources/config/routing.yml"
@@ -60,10 +62,11 @@ Or if you are not using a template engine:
 
 namespace Acme\DemoBundle\Controller;
 
-use Modera\DirectBundle\Annotation\Form;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Modera\DirectBundle\Annotation\Remote;
+use Modera\DirectBundle\Annotation\Form;
 
-class ExampleController extends Controller
+class ExampleController extends AbstractController
 {
    /**
     * Single exposed method.
@@ -73,7 +76,7 @@ class ExampleController extends Controller
     * @param  array $params
     * @return string
     */
-    public function indexAction($params)
+    public function indexAction(array $params)
     {
         return 'Hello ' . $params['name'];
     }
@@ -87,7 +90,7 @@ class ExampleController extends Controller
      * @param array $params Form submitted values
      * @param array $files  Uploaded files like $_FILES
      */
-    public function testFormAction($params, $files)
+    public function testFormAction(array $params, array $files)
     {
         // your proccessing
         return true;

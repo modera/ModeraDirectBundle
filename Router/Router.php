@@ -2,12 +2,13 @@
 
 namespace Modera\DirectBundle\Router;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Modera\DirectBundle\Api\ControllerApi;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
+use Modera\DirectBundle\Api\ControllerApi;
 
 class Router
 {
@@ -111,9 +112,15 @@ class Router
         $class = $this->getControllerClass($action);
 
         try {
+            if ($this->container->has($class)) {
+                return $this->container->get($class);
+            }
+
             $controller = new $class();
 
             if ($controller instanceof ContainerAwareInterface) {
+                $controller->setContainer($this->container);
+            } else if ($controller instanceof AbstractController) {
                 $controller->setContainer($this->container);
             }
 

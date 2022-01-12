@@ -2,10 +2,10 @@
 
 namespace Modera\DirectBundle\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController as Controller;
 use Symfony\Component\HttpFoundation\Response;
-use Modera\DirectBundle\Api\Api;
 use Modera\DirectBundle\Router\Router;
+use Modera\DirectBundle\Api\Api;
 
 class DirectController extends Controller
 {

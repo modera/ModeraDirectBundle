@@ -20,10 +20,16 @@
     </parameters>
 
     <services>
-        <service id="modera_direct.contributions.routing_resources_provider"
-                 class="Modera\DirectBundle\Contributions\RoutingResourcesProvider">
+        <service id="Modera\DirectBundle\Controller\DirectController"
+                 autoconfigure="true"
+                 autowire="false"
+                 public="false">
 
-            <tag name="modera_routing.routing_resources_provider" />
+            <call method="setContainer">
+                <argument type="service" id="service_container" />
+            </call>
+
+            <tag name="controller.service_arguments" />
         </service>
     </services>
 </container>

@@ -24,6 +24,12 @@ class ModeraDirectExtension extends Extension
 
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('direct.xml');
+
+        if (interface_exists('Sli\ExpanderBundle\Ext\ContributorInterface')) {
+            try {
+                $loader->load('routing.xml');
+            } catch (\Exception $e) {}
+        }
     }
 
     /**

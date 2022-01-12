@@ -153,7 +153,7 @@ class Request
      * @param mixed  $value
      * @param string $key
      */
-    public function decode(&$value, &$key)
+    public function decode(&$value, $key)
     {
         if (is_string($value)) {
             $value = utf8_decode($value);
@@ -166,7 +166,7 @@ class Request
      * @param mixed  $value
      * @param string $key
      */
-    private function parseRawToArray(&$value, &$key)
+    private function parseRawToArray(&$value, $key)
     {
         // parse a json string to an array
         if (is_string($value)) {
