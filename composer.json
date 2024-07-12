@@ -3,7 +3,7 @@
     "type": "symfony-bundle",
     "description": "Symfony ExtDirect Bundle",
     "keywords": ["ExtJS", "ExtDirect"],
-    "homepage": "https://github.com/modera/direct-bundle",
+    "homepage": "https://github.com/modera/ModeraDirectBundle",
     "license": "MIT",
     "authors": [
         {

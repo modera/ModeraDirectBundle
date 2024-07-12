@@ -23,7 +23,7 @@ class DirectControllerTest extends WebTestCase
         $this->assertTrue($crawler->filter('html:contains("url")')->count() > 0);
 
         // test actions in direc api
-        // @todo: improve this test
+        // @TODO: improve this test
         $this->assertTrue($crawler->filter('html:contains("actions")')->count() > 0);
     }
 }

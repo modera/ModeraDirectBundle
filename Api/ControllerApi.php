@@ -2,48 +2,54 @@
 
 namespace Modera\DirectBundle\Api;
 
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 class ControllerApi
 {
+    protected ContainerInterface $container;
+
     /**
      * Store the controller reflection object.
-     *
-     * @var \Reflection
      */
-    protected $reflection;
+    protected \ReflectionClass $reflection;
+
+    protected string $remoteAttribute;
+
+    protected string $formAttribute;
+
+    protected string $safeAttribute;
+
+    protected string $unsafeAttribute;
 
     /**
-     * The controller ExtDirect api.
-     *
-     * @var array
+     * @var ?array<int, array{'name': string, 'len': int, 'formHandler': bool}>
      */
-    protected $api;
+    protected ?array $api;
 
-    /**
-     * The application container.
-     *
-     * @var Symfony\Component\DependencyInjection\Container
-     */
-    protected $container;
-
-    /**
-     * Initialize the object.
-     *
-     * @param \Symfony\Component\Container $container
-     * @param string                       $controller
-     */
-    public function __construct($container, $controller)
+    public function __construct(ContainerInterface $container, string $controller)
     {
-        try {
-            $this->reflection = new \ReflectionClass($controller);
-        } catch (Exception $e) {
-            // @todo: throw an exception
-        }
-
         $this->container = $container;
-        $this->remoteAttribute = $container->getParameter('direct.api.remote_attribute');
-        $this->formAttribute = $container->getParameter('direct.api.form_attribute');
-        $this->safeAttribute = $container->getParameter('direct.api.safe_attribute');
-        $this->unsafeAttribute = $container->getParameter('direct.api.unsafe_attribute');
+
+        /** @var class-string $reflectionClass */
+        $reflectionClass = $controller;
+        $this->reflection = new \ReflectionClass($reflectionClass);
+
+        /** @var string $remoteAttribute */
+        $remoteAttribute = $this->container->getParameter('direct.api.remote_attribute');
+
+        /** @var string $formAttribute */
+        $formAttribute = $this->container->getParameter('direct.api.form_attribute');
+
+        /** @var string $safeAttribute */
+        $safeAttribute = $this->container->getParameter('direct.api.safe_attribute');
+
+        /** @var string $unsafeAttribute */
+        $unsafeAttribute = $this->container->getParameter('direct.api.unsafe_attribute');
+
+        $this->remoteAttribute = $remoteAttribute;
+        $this->formAttribute = $formAttribute;
+        $this->safeAttribute = $safeAttribute;
+        $this->unsafeAttribute = $unsafeAttribute;
         $this->api = $this->createApi();
     }
 
@@ -52,48 +58,42 @@ class ControllerApi
      *
      * @return bool true if has exposed, otherwise return false
      */
-    public function isExposed()
+    public function isExposed(): bool
     {
-        return (null != $this->api) ? true : false;
+        return null !== $this->api;
     }
 
     /**
      * Return the api.
      *
-     * @return array
+     * @return ?array<int, array{'name': string, 'len': int, 'formHandler': bool}>
      */
-    public function getApi()
+    public function getApi(): ?array
     {
         return $this->api;
     }
 
     /**
      * Return the name of exposed direct Action.
-     *
-     * @return string
      */
-    public function getActionName()
+    public function getActionName(): string
     {
-        return str_replace('Controller', '', $this->reflection->getShortName());
+        return \str_replace('Controller', '', $this->reflection->getShortName());
     }
 
     /**
      * Check the method access type.
-     *
-     * @param string $method
-     *
-     * @return string s = safe access u = unsafe access n = none
      */
-    public function getMethodAccess($method)
+    public function getMethodAccess(string $method): string
     {
         $doc = $this->reflection->getMethod($method)->getDocComment();
 
         // default access type is none
         $access = 'n';
 
-        if (strlen($doc) > 0) {
-            $safe = preg_match('/'.$this->safeAttribute.'/i', $doc);
-            $unsafe = preg_match('/'.$this->unsafeAttribute.'/i', $doc);
+        if (\is_string($doc) && \strlen($doc) > 0) {
+            $safe = \preg_match('/'.$this->safeAttribute.'/i', $doc);
+            $unsafe = \preg_match('/'.$this->unsafeAttribute.'/i', $doc);
 
             if ($safe) {
                 $access = 'secure';
@@ -106,13 +106,13 @@ class ControllerApi
     }
 
     /**
-     * Try create the controller api.
+     * Try to create the controller api.
      *
-     * @return array
+     * @return ?array<int, array{'name': string, 'len': int, 'formHandler': bool}>
      */
-    protected function createApi()
+    protected function createApi(): ?array
     {
-        $api = null;
+        $api = [];
 
         // get public methods from controller
         $methods = $this->reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
@@ -125,35 +125,28 @@ class ControllerApi
             }
         }
 
-        return $api;
+        return \count($api) ? $api : null;
     }
 
     /**
      * Return the api of method.
      *
-     * @param \ReflectionMethod $method
-     *
-     * @return mixed (array/boolean)
+     * @return ?array{'name': string, 'len': int, 'formHandler': bool}
      */
-    private function getMethodApi($method)
+    private function getMethodApi(\ReflectionMethod $method): ?array
     {
-        $api = false;
-
-        if (strlen($method->getDocComment()) > 0) {
-            $doc = $method->getDocComment();
-
-            $isRemote = preg_match('/'.$this->remoteAttribute.'/i', $doc);
-
+        $doc = $method->getDocComment();
+        if (\is_string($doc) && \strlen($doc) > 0) {
+            $isRemote = \preg_match('/'.$this->remoteAttribute.'/i', $doc);
             if ($isRemote) {
-                $api['name'] = str_replace('Action', '', $method->getName());
-                $api['len'] = $method->getNumberOfParameters();
-
-                if (preg_match('/'.$this->formAttribute.'/i', $doc)) {
-                    $api['formHandler'] = true;
-                }
+                return [
+                    'name' => \str_replace('Action', '', $method->getName()),
+                    'len' => $method->getNumberOfParameters(),
+                    'formHandler' => (bool) \preg_match('/'.$this->formAttribute.'/i', $doc),
+                ];
             }
         }
 
-        return $api;
+        return null;
     }
 }

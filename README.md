@@ -7,7 +7,7 @@ ModeraDirectBundle is an implementation of ExtDirect specification to Symfony fr
 ### Step 1: Download the Bundle
 
 ``` bash
-composer require modera/direct-bundle:.x-dev
+composer require modera/direct-bundle:5.x-dev
 ```
 
 This command requires you to have Composer installed globally, as explained

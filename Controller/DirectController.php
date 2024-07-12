@@ -2,34 +2,48 @@
 
 namespace Modera\DirectBundle\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController as Controller;
-use Symfony\Component\HttpFoundation\Response;
-use Modera\DirectBundle\Router\Router;
 use Modera\DirectBundle\Api\Api;
+use Modera\DirectBundle\Router\Router;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController as Controller;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 class DirectController extends Controller
 {
+    protected function getContainer(): ContainerInterface
+    {
+        /** @var ContainerInterface $container */
+        $container = $this->container;
+
+        return $container;
+    }
+
+    protected function isDebug(): bool
+    {
+        /** @var KernelInterface $kernel */
+        $kernel = $this->getContainer()->get('kernel');
+
+        return $kernel->isDebug();
+    }
+
     /**
      * Generate the ExtDirect API.
-     *
-     * @return Response
      */
-    public function getApiAction()
+    public function getApiAction(): Response
     {
         // instantiate the api object
-        $api = new Api($this->container);
+        $api = new Api($this->getContainer());
 
-        $debug = $this->container->get('kernel')->isDebug();
-
-        if ($debug) {
-            $exceptionLogStr =
-                'Ext.direct.Manager.on("exception", function(error){console.error(Ext.util.Format.format("Remote Call: {0}.{1}\n{2}", error.action, error.method, error.message, error.where)); return false;});';
+        if ($this->isDebug()) {
+            $exceptionLogStr = 'Ext.direct.Manager.on("exception", function(error) { console.error(Ext.util.Format.format("Remote Call: {0}.{1}\n{2}", error.action, error.method, error.message, error.where)); return false; });';
         } else {
-            $exceptionLogStr =
-                sprintf('Ext.direct.Manager.on("exception", function(error){console.error("%s");});', $this->container->getParameter('direct.exception.message'));
+            /** @var string $exceptionMessage */
+            $exceptionMessage = $this->getContainer()->getParameter('direct.exception.message');
+            $exceptionLogStr = \sprintf('Ext.direct.Manager.on("exception", function(error) { console.error("%s"); });', $exceptionMessage);
         }
         // create the response
-        $response = new Response(sprintf('Ext.Direct.addProvider(%s);%s', $api, $exceptionLogStr));
+        $response = new Response(\sprintf('Ext.Direct.addProvider(%s);%s', $api, $exceptionLogStr));
         $response->headers->set('Content-Type', 'text/javascript');
 
         return $response;
@@ -37,18 +51,14 @@ class DirectController extends Controller
 
     /**
      * Generate the Remoting ExtDirect API.
-     *
-     * @return Response
      */
-    public function getRemotingAction()
+    public function getRemotingAction(): Response
     {
         // instantiate the api object
-        $api = new Api($this->container);
-
-        $debug = $this->container->get('kernel')->isDebug();
+        $api = new Api($this->getContainer());
 
         // create the response
-        $response = new Response(sprintf('Ext.app.REMOTING_API = %s;', $api));
+        $response = new Response(\sprintf('Ext.app.REMOTING_API = %s;', $api));
         $response->headers->set('Content-Type', 'text/javascript');
 
         return $response;
@@ -56,13 +66,11 @@ class DirectController extends Controller
 
     /**
      * Route the ExtDirect calls.
-     *
-     * @return Response
      */
-    public function routeAction()
+    public function routeAction(): Response
     {
         // instantiate the router object
-        $router = new Router($this->container);
+        $router = new Router($this->getContainer());
 
         // create response
         $response = new Response($router->route());

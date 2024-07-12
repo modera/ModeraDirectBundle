@@ -8,90 +8,74 @@ class Request
 {
     /**
      * The Symfony request object taked by ModeraDirectBundle controller.
-     *
-     * @var Symfony\Component\HttpFoundation\Request
      */
-    protected $request;
+    protected SymfonyRequest $request;
 
     /**
      * The HTTP_RAW_POST_DATA if the Direct call is a batch call.
-     *
-     * @var JSON
      */
-    protected $rawPost;
+    protected string $rawPost;
 
     /**
      * The $_POST data if the Direct Call is a form call.
      *
-     * @var array
+     * @var array<mixed>
      */
-    protected $post;
+    protected array $post;
 
     /**
-     * Store the Direct Call type. Where values in ('form','batch').
-     *
-     * @var string
+     * Store the Direct Call type. Where values in ('form', 'batch').
      */
-    protected $callType;
+    protected string $callType;
 
     /**
      * Is upload request?
-     *
-     * @var bool
      */
-    protected $isUpload = false;
+    protected bool $isUpload = false;
 
     /**
-     * Store the Direct calls. Only 1 if it a form call or 1.* if it a
-     * batch call.
+     * Store the Direct calls. Only 1 if it is a form call or 1.* if it is a batch call.
      *
-     * @var array
+     * @var ?array<int, Call>
      */
-    protected $calls = null;
+    protected ?array $calls = null;
 
     /**
-     * Store the $_FILES if it a form call.
+     * Store the $_FILES if it is a form call.
      *
-     * @var array
+     * @var array<mixed>
      */
-    protected $files;
+    protected array $files;
 
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     */
     public function __construct(SymfonyRequest $request)
     {
         // before we were checking if $request->request->count() > 0 to
         // check if a given request is a form submission but in some cases
         // (Symfony?) merges all parameters (event decoded json body) into
-        // $request->request and it was causing problems. Hopefully this solution
+        // $request->request, and it was causing problems. Hopefully this solution
         // will work in all cases
-        $hasJsonInBody = is_array(json_decode($request->getContent(), true));
+        $hasJsonInBody = \is_array(\json_decode($request->getContent(), true));
 
         $this->request = $request;
-        $this->rawPost = $request->getContent() ? $request->getContent() : array();
+        $this->rawPost = $request->getContent() ? $request->getContent() : '{}';
         $this->post = $request->request->all();
         $this->files = $request->files->all();
         $this->callType = $hasJsonInBody ? 'batch' : 'form';
-        $this->isUpload = $request->request->get('extUpload') == 'true';
+        $this->isUpload = 'true' == $request->request->get('extUpload');
     }
 
     /**
      * Return the type of Direct call.
-     *
-     * @return string
      */
-    public function getCallType()
+    public function getCallType(): string
     {
         return $this->callType;
     }
 
     /**
      * Is upload request?
-     *
-     * @return bool
      */
-    public function isUpload()
+    public function isUpload(): bool
     {
         return $this->isUpload;
     }
@@ -99,9 +83,9 @@ class Request
     /**
      * Return the files from call.
      *
-     * @return array
+     * @return array<mixed>
      */
-    public function getFiles()
+    public function getFiles(): array
     {
         return $this->files;
     }
@@ -109,11 +93,11 @@ class Request
     /**
      * Get the direct calls object.
      *
-     * @return array
+     * @return array<int, Call>
      */
-    public function getCalls()
+    public function getCalls(): array
     {
-        if (null == $this->calls) {
+        if (null === $this->calls) {
             $this->calls = $this->extractCalls();
         }
 
@@ -123,21 +107,22 @@ class Request
     /**
      * Extract the ExtDirect calls from request.
      *
-     * @return array
+     * @return array<int, Call>
      */
-    public function extractCalls()
+    public function extractCalls(): array
     {
-        $calls = array();
+        /** @var array<int, Call> $calls */
+        $calls = [];
 
-        if ('form' == $this->callType) {
+        if ('form' === $this->callType) {
             $calls[] = new Call($this->post, 'form');
         } else {
-            $decoded = json_decode($this->rawPost);
-            $decoded = !is_array($decoded) ? array($decoded) : $decoded;
+            $decoded = \json_decode($this->rawPost);
+            $decoded = !\is_array($decoded) ? [$decoded] : $decoded;
 
-            array_walk_recursive($decoded, array($this, 'parseRawToArray'));
-            // @todo: check utf8 config option from bundle
-            //array_walk_recursive($decoded, array($this, 'decode'));
+            \array_walk_recursive($decoded, [$this, 'parseRawToArray']);
+            // TODO: check utf8 config option from bundle
+            // array_walk_recursive($decoded, array($this, 'decode'));
 
             foreach ($decoded as $call) {
                 $calls[] = new Call((array) $call, 'single');
@@ -150,29 +135,27 @@ class Request
     /**
      * Force the utf8 decodification from all string values.
      *
-     * @param mixed  $value
-     * @param string $key
+     * @param mixed $value Mixed value
      */
-    public function decode(&$value, $key)
+    public function decode(&$value, string $key): void
     {
-        if (is_string($value)) {
-            $value = utf8_decode($value);
+        if (\is_string($value)) {
+            $value = \utf8_decode($value);
         }
     }
 
     /**
      * Parse a raw http post to a php array.
      *
-     * @param mixed  $value
-     * @param string $key
+     * @param mixed $value Mixed value
      */
-    private function parseRawToArray(&$value, $key)
+    private function parseRawToArray(&$value, string $key): void
     {
         // parse a json string to an array
-        if (is_string($value)) {
-            $pos = substr($value, 0, 1);
-            if ($pos == '[' || $pos == '(' || $pos == '{') {
-                $json = json_decode($value);
+        if (\is_string($value)) {
+            $pos = \substr($value, 0, 1);
+            if ('[' === $pos || '(' === $pos || '{' === $pos) {
+                $json = \json_decode($value);
             } else {
                 $json = $value;
             }
@@ -183,13 +166,13 @@ class Request
         }
 
         // if the value is an object, parse it to an array
-        if (is_object($value)) {
+        if (\is_object($value)) {
             $value = (array) $value;
         }
 
         // call the recursive function to all keys of array
-        if (is_array($value)) {
-            array_walk_recursive($value, array($this, 'parseRawToArray'));
+        if (\is_array($value)) {
+            \array_walk_recursive($value, [$this, 'parseRawToArray']);
         }
     }
 }

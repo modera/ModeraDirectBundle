@@ -2,8 +2,8 @@
 
 namespace Modera\DirectBundle\Tests\Api;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Modera\DirectBundle\Api\Api;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class ApiTest extends WebTestCase
 {

@@ -10,12 +10,7 @@ use Modera\DirectBundle\Exception\CallException;
  */
 trait ControllerTrait
 {
-    /**
-     * @param string|null $message
-     * @param \Throwable|null $previous
-     * @return CallException
-     */
-    protected function createDirectCallException($message = null, \Throwable $previous = null)
+    protected function createDirectCallException(string $message = '', ?\Throwable $previous = null): CallException
     {
         return new CallException($message, $previous);
     }

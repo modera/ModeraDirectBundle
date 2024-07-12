@@ -4,39 +4,29 @@ namespace Modera\DirectBundle\Api;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 class Api
 {
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
+    protected ContainerInterface $container;
 
     /**
      * The ExtDirect JSON API description.
-     *
-     * @var JSON
      */
-    protected $api;
+    protected string $api;
 
     /**
      * Initialize the API.
      */
-    public function __construct($container)
+    public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
 
-        if ($container->get('kernel')->isDebug()) {
-            $this->api = json_encode($this->createApi());
-        } else {
-            $this->api = $this->getApiFromCache();
-        }
+        $this->api = $this->createApi();
     }
 
     /**
      * Return the API in JSON format.
-     *
-     * @return string JSON API description
      */
     public function __toString()
     {
@@ -45,17 +35,15 @@ class Api
 
     /**
      * Create the ExtDirect API based on controllers files.
-     *
-     * @return string JSON description of Direct API
      */
-    protected function createApi()
+    protected function createApi(): string
     {
         $bundles = $this->getControllers();
 
-        $actions = array();
+        $actions = [];
 
         foreach ($bundles as $bundle => $controllers) {
-            $bundleShortName = str_replace('Bundle', '', $bundle);
+            $bundleShortName = \str_replace('Bundle', '', $bundle);
 
             foreach ($controllers as $controller) {
                 $api = new ControllerApi($this->container, $controller);
@@ -66,42 +54,58 @@ class Api
             }
         }
 
-        /* @var RequestStack $rs */
+        /** @var RequestStack $rs */
         $rs = $this->container->get('request_stack');
         $request = $rs->getCurrentRequest();
+        $baseUrl = $request ? $request->getBaseUrl() : '';
 
-        return array(
-            'url' => $request->getBaseUrl().$this->container->getParameter('direct.api.route_pattern'),
-            'enableBuffer' => $this->container->getParameter('direct.api.enable_buffer'),
-            'type' => $this->container->getParameter('direct.api.type'),
-            'namespace' => $this->container->getParameter('direct.api.namespace'),
-            'id' => $this->container->getParameter('direct.api.id'),
+        /** @var string $routePattern */
+        $routePattern = $this->container->getParameter('direct.api.route_pattern');
+
+        /** @var bool $enableBuffer */
+        $enableBuffer = $this->container->getParameter('direct.api.enable_buffer');
+
+        /** @var string $type */
+        $type = $this->container->getParameter('direct.api.type');
+
+        /** @var string $namespace */
+        $namespace = $this->container->getParameter('direct.api.namespace');
+
+        /** @var string $id */
+        $id = $this->container->getParameter('direct.api.id');
+
+        $api = \json_encode([
+            'url' => $baseUrl.$routePattern,
+            'enableBuffer' => $enableBuffer,
+            'type' => $type,
+            'namespace' => $namespace,
+            'id' => $id,
             'actions' => $actions,
-        );
-    }
+        ]);
 
-    /**
-     * Return the cached ExtDirect API.
-     *
-     * @return string JSON description of Direct API
-     */
-    protected function getApiFromCache()
-    {
-        //@todo: implement the cache mechanism
-        return json_encode($this->createApi());
+        if (!$api) {
+            throw new \RuntimeException('API creation failed');
+        }
+
+        return $api;
     }
 
     /**
      * Get all controllers from all bundles.
      *
-     * @return array Controllers list
+     * @return array<string, string[]> Controllers list
      */
-    protected function getControllers()
+    protected function getControllers(): array
     {
-        $controllers = array();
         $finder = new ControllerFinder();
 
-        foreach ($this->container->get('kernel')->getBundles() as $bundle) {
+        /** @var array<string, string[]> $controllers */
+        $controllers = [];
+
+        /** @var KernelInterface $kernel */
+        $kernel = $this->container->get('kernel');
+
+        foreach ($kernel->getBundles() as $bundle) {
             $found = $finder->getControllers($bundle);
             if (!empty($found)) {
                 $controllers[$bundle->getName()] = $found;

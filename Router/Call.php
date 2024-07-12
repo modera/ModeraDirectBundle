@@ -8,64 +8,49 @@ class Call
 {
     /**
      * The ExtDirect action called. With reference to Bundle via underscore '_'.
-     *
-     * @var string
      */
-    protected $action;
+    protected string $action;
 
     /**
      * The ExtDirect method called.
-     *
-     * @var string
      */
-    protected $method;
+    protected string $method;
 
     /**
      * The ExtDirect request type.
-     *
-     * @var string
      */
-    protected $type;
+    protected string $type;
 
     /**
      * The ExtDirect transaction id.
-     *
-     * @var int
      */
-    protected $tid;
+    protected int $tid;
 
     /**
      * The ExtDirect call params.
      *
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $data;
+    protected array $data;
 
     /**
-     * The ExtDirect request type. Where values in ('form','single').
-     *
-     * @var string
+     * The ExtDirect request type. Where values in ('form', 'single').
      */
-    protected $callType;
+    protected string $callType;
 
     /**
      * The ExtDirect upload reference.
-     *
-     * @var bool
      */
-    protected $upload;
+    protected bool $upload;
 
     /**
-     * Initialize an ExtDirect call.
-     *
-     * @param array  $call
-     * @param string $type
+     * @param array<string, mixed> $call
      */
-    public function __construct($call, $type)
+    public function __construct(array $call, string $type)
     {
         $this->callType = $type;
 
-        if ('single' == $type) {
+        if ('single' === $type) {
             $this->initializeFromSingle($call);
         } else {
             $this->initializeFromForm($call);
@@ -74,20 +59,16 @@ class Call
 
     /**
      * Get the requested action.
-     *
-     * @return string
      */
-    public function getAction()
+    public function getAction(): string
     {
         return $this->action;
     }
 
     /**
      * Get the requested method.
-     *
-     * @return string
      */
-    public function getMethod()
+    public function getMethod(): string
     {
         return $this->method;
     }
@@ -95,9 +76,9 @@ class Call
     /**
      * Get the request method params.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getData()
+    public function getData(): array
     {
         return $this->data;
     }
@@ -105,44 +86,55 @@ class Call
     /**
      * Return a result wrapper to ExtDirect method call.
      *
-     * @param array $result
+     * @param array<mixed> $result
      *
-     * @return array
+     * @return array{
+     *     'type': string,
+     *     'tid': int,
+     *     'action': string,
+     *     'method': string,
+     *     'result': array<mixed>
+     *     }
      */
-    public function getResponse($result)
+    public function getResponse(array $result): array
     {
-        return array(
-          'type' => 'rpc',
-          'tid' => $this->tid,
-          'action' => $this->action,
-          'method' => $this->method,
-          'result' => $result,
-        );
+        return [
+            'type' => 'rpc',
+            'tid' => $this->tid,
+            'action' => $this->action,
+            'method' => $this->method,
+            'result' => $result,
+        ];
     }
 
     /**
      * Return an exception to ExtDirect call stack.
      *
-     * @param \Exception $exception
-     * @param string     $environment Since 2.56.0
-     *
-     * @return array
+     * @return array{
+     *     'type': string,
+     *     'tid': int,
+     *     'action': string,
+     *     'method': string,
+     *     'message'?: string,
+     *     'class'?: string,
+     *     'where'?: string
+     * }
      */
-    public function getException(\Exception $exception, $environment = 'dev')
+    public function getException(\Exception $exception, string $environment = 'dev'): array
     {
         // https://docs.sencha.com/extjs/6.0.2/guides/backend_connectors/direct/specification.html
-        $response = array(
+        $response = [
             'type' => 'exception',
             'tid' => $this->tid,
             'action' => $this->action,
             'method' => $this->method,
-        );
+        ];
 
         if ($exception instanceof CallException) {
             if (null !== $exception->getMessage()) {
-                $response = array_merge($response, array(
+                $response = \array_merge($response, [
                     'message' => $exception->getMessage(),
-                ));
+                ]);
             }
 
             if ($exception->getPrevious()) {
@@ -150,12 +142,12 @@ class Call
             }
         }
 
-        if (in_array($environment, ['test', 'dev'])) {
-            return array_merge($response, array(
-                'class' => get_class($exception),
+        if (\in_array($environment, ['test', 'dev'])) {
+            return \array_merge($response, [
+                'class' => \get_class($exception),
                 'message' => $exception->getMessage(),
                 'where' => $exception->getTraceAsString(),
-            ));
+            ]);
         } else {
             return $response;
         }
@@ -164,24 +156,42 @@ class Call
     /**
      * Initialize the call properties from a single call.
      *
-     * @param array $call
+     * @param array<string, mixed> $arr
      */
-    private function initializeFromSingle($call)
+    private function initializeFromSingle(array $arr): void
     {
+        /** @var array{
+         *     'action': string,
+         *     'method': string,
+         *     'type': string,
+         *     'tid': int,
+         *     'data'?: array<int, array<mixed>>|mixed
+         * } & array<string, mixed> $call */
+        $call = $arr;
+
         $this->action = $call['action'];
         $this->method = $call['method'];
         $this->type = $call['type'];
         $this->tid = $call['tid'];
-        $this->data = isset($call['data']) && is_array($call['data']) ? (array) $call['data'][0] : array();
+        $this->data = isset($call['data']) && \is_array($call['data']) ? (array) $call['data'][0] : [];
     }
 
     /**
      * Initialize the call properties from a form call.
      *
-     * @param array $call
+     * @param array<string, mixed> $arr
      */
-    private function initializeFromForm($call)
+    private function initializeFromForm(array $arr): void
     {
+        /** @var array{
+         *     'extAction': string,
+         *     'extMethod': string,
+         *     'extType': string,
+         *     'extTID': int,
+         *     'extUpload': bool
+         * } $call */
+        $call = $arr;
+
         $this->action = $call['extAction'];
         unset($call['extAction']);
         $this->method = $call['extMethod'];
@@ -193,7 +203,11 @@ class Call
         $this->upload = $call['extUpload'];
         unset($call['extUpload']);
 
-        foreach ($call as $key => $value) {
+        /**
+         * @var array<string, mixed> $data
+         */
+        $data = $call;
+        foreach ($data as $key => $value) {
             $this->data[$key] = $value;
         }
     }

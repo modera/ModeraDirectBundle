@@ -2,54 +2,62 @@
 
 namespace Modera\DirectBundle\Router;
 
+use Modera\DirectBundle\Api\ControllerApi;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\Bundle\BundleInterface;
-use Modera\DirectBundle\Api\ControllerApi;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 class Router
 {
-    /**
-     * @var \Modera\DirectBundle\Router\Request
-     */
-    protected $request;
+    protected Request $request;
+
+    protected Response $response;
+
+    protected ContainerInterface $container;
+
+    protected string $defaultAccess;
 
     /**
-     * @var \Modera\DirectBundle\Router\Response
+     * @var mixed Mixed value
      */
-    protected $response;
+    protected $session;
 
-    /**
-     * @var Container
-     */
-    protected $container;
-
-    /**
-     * @param Container $container
-     */
     public function __construct(ContainerInterface $container)
     {
-        /* @var RequestStack $requestStack */
+        $this->container = $container;
+
+        /** @var RequestStack $requestStack */
         $requestStack = $container->get('request_stack');
 
-        $this->container = $container;
-        $this->request = new Request($requestStack->getCurrentRequest());
+        /** @var SymfonyRequest $request */
+        $request = $requestStack->getCurrentRequest();
+
+        /** @var string $defaultAccess */
+        $defaultAccess = $container->getParameter('direct.api.default_access');
+
+        /** @var string $sessionAttribute */
+        $sessionAttribute = $container->getParameter('direct.api.session_attribute');
+
+        /** @var SessionInterface $session */
+        $session = $container->get('session');
+
+        $this->defaultAccess = $defaultAccess;
+        $this->session = $session->get($sessionAttribute);
+
+        $this->request = new Request($request);
         $this->response = new Response($this->request->getCallType(), $this->request->isUpload());
-        $this->defaultAccess = $container->getParameter('direct.api.default_access');
-        $this->session = $this->container->get('session')->get($container->getParameter('direct.api.session_attribute'));
     }
 
     /**
      * Do the ExtDirect routing processing.
-     *
-     * @return string
      */
-    public function route()
+    public function route(): string
     {
-        $batch = array();
+        $batch = [];
 
         foreach ($this->request->getCalls() as $call) {
             $batch[] = $this->dispatch($call);
@@ -61,11 +69,9 @@ class Router
     /**
      * Dispatch a remote method call.
      *
-     * @param Call $call
-     *
-     * @return mixed
+     * @return ?array<mixed>
      */
-    private function dispatch(Call $call)
+    private function dispatch(Call $call): ?array
     {
         $api = new ControllerApi($this->container, $this->getControllerClass($call->getAction()));
 
@@ -73,18 +79,18 @@ class Router
         $method = $call->getMethod().'Action';
         $accessType = $api->getMethodAccess($method);
 
-        if (!is_callable(array($controller, $method))) {
-            //todo: throw an exception method not callable
-            return false;
-        } elseif ($this->defaultAccess == 'secure' && $accessType != 'anonymous') {
+        if (!\is_callable([$controller, $method])) {
+            // TODO: throw an exception method not callable
+            return null;
+        } elseif ('secure' === $this->defaultAccess && 'anonymous' !== $accessType) {
             if (!$this->session) {
                 $result = $call->getException(new \Exception('Access denied!'));
             }
-        } elseif ($accessType == 'secure') {
+        } elseif ('secure' === $accessType) {
             if (!$this->session) {
                 $result = $call->getException(new \Exception('Access denied!'));
             }
-        } elseif ('form' == $this->request->getCallType()) {
+        } elseif ('form' === $this->request->getCallType()) {
             $result = $call->getResponse($controller->$method($call->getData(), $this->request->getFiles()));
         }
 
@@ -93,7 +99,9 @@ class Router
                 $result = $controller->$method($call->getData());
                 $result = $call->getResponse($result);
             } catch (\Exception $e) {
-                $result = $call->getException($e, $this->container->getParameter('kernel.environment'));
+                /** @var string $environment */
+                $environment = $this->container->getParameter('kernel.environment');
+                $result = $call->getException($e, $environment);
             }
         }
 
@@ -103,11 +111,9 @@ class Router
     /**
      * Resolve the called controller from action.
      *
-     * @param string $action
-     *
-     * @return <type>
+     * @return mixed Mixed value
      */
-    private function resolveController($action)
+    private function resolveController(string $action)
     {
         $class = $this->getControllerClass($action);
 
@@ -120,33 +126,32 @@ class Router
 
             if ($controller instanceof ContainerAwareInterface) {
                 $controller->setContainer($this->container);
-            } else if ($controller instanceof AbstractController) {
+            } elseif ($controller instanceof AbstractController) {
                 $controller->setContainer($this->container);
             }
 
             return $controller;
         } catch (\Exception $e) {
-            // todo: handle exception
+            // TODO: handle exception
             throw $e;
         }
     }
 
     /**
      * Return the controller class name.
-     *
-     * @param string $action
      */
-    private function getControllerClass($action)
+    private function getControllerClass(string $action): string
     {
-        list($bundleName, $controllerName) = explode('_', $action);
+        list($bundleName, $controllerName) = \explode('_', $action);
         $bundleName .= 'Bundle';
 
-        /* @var BundleInterface $bundle */
-        $bundle = $this->container->get('kernel')->getBundle($bundleName);
+        /** @var KernelInterface $kernel */
+        $kernel = $this->container->get('kernel');
+
+        $bundle = $kernel->getBundle($bundleName);
+
         $namespace = $bundle->getNamespace().'\\Controller';
 
-        $class = $namespace.'\\'.$controllerName.'Controller';
-
-        return $class;
+        return $namespace.'\\'.$controllerName.'Controller';
     }
 }
