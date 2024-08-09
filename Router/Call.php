@@ -24,7 +24,7 @@ class Call
     /**
      * The ExtDirect transaction id.
      */
-    protected int $tid;
+    protected ?int $tid;
 
     /**
      * The ExtDirect call params.
@@ -90,7 +90,7 @@ class Call
      *
      * @return array{
      *     'type': string,
-     *     'tid': int,
+     *     'tid': ?int,
      *     'action': string,
      *     'method': string,
      *     'result': array<mixed>
@@ -112,7 +112,7 @@ class Call
      *
      * @return array{
      *     'type': string,
-     *     'tid': int,
+     *     'tid': ?int,
      *     'action': string,
      *     'method': string,
      *     'message'?: string,
@@ -164,7 +164,7 @@ class Call
          *     'action': string,
          *     'method': string,
          *     'type': string,
-         *     'tid': int,
+         *     'tid'?: ?int,
          *     'data'?: array<int, array<mixed>>|mixed
          * } & array<string, mixed> $call */
         $call = $arr;
@@ -172,7 +172,7 @@ class Call
         $this->action = $call['action'];
         $this->method = $call['method'];
         $this->type = $call['type'];
-        $this->tid = $call['tid'];
+        $this->tid = $call['tid'] ?? null;
         $this->data = isset($call['data']) && \is_array($call['data']) ? (array) $call['data'][0] : [];
     }
 
@@ -187,7 +187,7 @@ class Call
          *     'extAction': string,
          *     'extMethod': string,
          *     'extType': string,
-         *     'extTID': int,
+         *     'extTID'?: ?int,
          *     'extUpload': bool
          * } $call */
         $call = $arr;
@@ -198,7 +198,7 @@ class Call
         unset($call['extMethod']);
         $this->type = $call['extType'];
         unset($call['extType']);
-        $this->tid = $call['extTID'];
+        $this->tid = $call['extTID'] ?? null;
         unset($call['extTID']);
         $this->upload = $call['extUpload'];
         unset($call['extUpload']);
