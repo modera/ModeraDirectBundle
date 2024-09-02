@@ -43,7 +43,7 @@ class Router
         $sessionAttribute = $container->getParameter('direct.api.session_attribute');
 
         /** @var SessionInterface $session */
-        $session = $container->get('session');
+        $session = $request->getSession();
 
         $this->defaultAccess = $defaultAccess;
         $this->session = $session->get($sessionAttribute);
