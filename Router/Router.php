@@ -96,7 +96,7 @@ class Router
 
         if (!isset($result)) {
             try {
-                $result = $controller->$method($call->getData());
+                $result = $controller->$method(...$call->getData());
                 $result = $call->getResponse($result);
             } catch (\Exception $e) {
                 /** @var string $environment */

@@ -165,7 +165,7 @@ class Call
          *     'method': string,
          *     'type': string,
          *     'tid'?: ?int,
-         *     'data'?: array<int, array<mixed>>|mixed
+         *     'data'?: array<int, mixed>|mixed
          * } & array<string, mixed> $call */
         $call = $arr;
 
@@ -173,7 +173,7 @@ class Call
         $this->method = $call['method'];
         $this->type = $call['type'];
         $this->tid = $call['tid'] ?? null;
-        $this->data = isset($call['data']) && \is_array($call['data']) ? (array) $call['data'][0] : [];
+        $this->data = \is_array($call['data'] ?? null) ? $call['data'] : [];
     }
 
     /**

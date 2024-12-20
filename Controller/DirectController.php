@@ -36,14 +36,19 @@ class DirectController extends Controller
         $api = new Api($this->getContainer());
 
         if ($this->isDebug()) {
-            $exceptionLogStr = 'Ext.direct.Manager.on("exception", function(error) { console.error(Ext.util.Format.format("Remote Call: {0}.{1}\n{2}", error.action, error.method, error.message, error.where)); return false; });';
+            $exceptionLogStr = 'console.error("Remote Call:", event);';
         } else {
             /** @var string $exceptionMessage */
             $exceptionMessage = $this->getContainer()->getParameter('direct.exception.message');
-            $exceptionLogStr = \sprintf('Ext.direct.Manager.on("exception", function(error) { console.error("%s"); });', $exceptionMessage);
+            $exceptionLogStr = \sprintf('console.error(%s);', \json_encode($exceptionMessage));
         }
         // create the response
-        $response = new Response(\sprintf('Ext.Direct.addProvider(%s);%s', $api, $exceptionLogStr));
+        $response = new Response(\sprintf(\implode(\PHP_EOL, [
+            'Ext.Direct.addProvider(%s);',
+            'Ext.direct.Manager.on("exception", function(event) {',
+            '    %s',
+            '});',
+        ]), $api, $exceptionLogStr));
         $response->headers->set('Content-Type', 'text/javascript');
 
         return $response;
