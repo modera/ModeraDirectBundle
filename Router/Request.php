@@ -24,7 +24,7 @@ class Request
     protected array $post;
 
     /**
-     * Store the Direct Call type. Where values in ('form', 'batch').
+     * Store the Direct Call type. Where values in ('form', 'single').
      */
     protected string $callType;
 
@@ -60,7 +60,7 @@ class Request
         $this->rawPost = $request->getContent() ? $request->getContent() : '{}';
         $this->post = $request->request->all();
         $this->files = $request->files->all();
-        $this->callType = $hasJsonInBody ? 'batch' : 'form';
+        $this->callType = $hasJsonInBody ? 'single' : 'form';
         $this->isUpload = 'true' == $request->request->get('extUpload');
     }
 
@@ -115,7 +115,7 @@ class Request
         $calls = [];
 
         if ('form' === $this->callType) {
-            $calls[] = new Call($this->post, 'form');
+            $calls[] = $this->callFactory($this->post);
         } else {
             $decoded = \json_decode($this->rawPost);
             $decoded = !\is_array($decoded) ? [$decoded] : $decoded;
@@ -125,11 +125,19 @@ class Request
             // array_walk_recursive($decoded, array($this, 'decode'));
 
             foreach ($decoded as $call) {
-                $calls[] = new Call((array) $call, 'single');
+                $calls[] = $this->callFactory((array) $call);
             }
         }
 
         return $calls;
+    }
+
+    /**
+     * @param array<mixed> $call
+     */
+    protected function callFactory(array $call): Call
+    {
+        return new Call($call, $this->callType);
     }
 
     /**

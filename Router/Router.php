@@ -48,8 +48,18 @@ class Router
         $this->defaultAccess = $defaultAccess;
         $this->session = $session->get($sessionAttribute);
 
-        $this->request = new Request($request);
-        $this->response = new Response($this->request->getCallType(), $this->request->isUpload());
+        $this->request = $this->requestFactory($request);
+        $this->response = $this->responseFactory();
+    }
+
+    protected function requestFactory(SymfonyRequest $request): Request
+    {
+        return new Request($request);
+    }
+
+    protected function responseFactory(): Response
+    {
+        return new Response($this->request->getCallType(), $this->request->isUpload());
     }
 
     /**
@@ -71,7 +81,7 @@ class Router
      *
      * @return ?array<mixed>
      */
-    private function dispatch(Call $call): ?array
+    protected function dispatch(Call $call): ?array
     {
         $api = new ControllerApi($this->container, $this->getControllerClass($call->getAction()));
 
@@ -79,16 +89,19 @@ class Router
         $method = $call->getMethod().'Action';
         $accessType = $api->getMethodAccess($method);
 
+        /** @var string $environment */
+        $environment = $this->container->getParameter('kernel.environment');
+
         if (!\is_callable([$controller, $method])) {
             // TODO: throw an exception method not callable
             return null;
         } elseif ('secure' === $this->defaultAccess && 'anonymous' !== $accessType) {
             if (!$this->session) {
-                $result = $call->getException(new \Exception('Access denied!'));
+                $result = $call->getException(new \Exception('Access denied!'), $environment);
             }
         } elseif ('secure' === $accessType) {
             if (!$this->session) {
-                $result = $call->getException(new \Exception('Access denied!'));
+                $result = $call->getException(new \Exception('Access denied!'), $environment);
             }
         } elseif ('form' === $this->request->getCallType()) {
             $result = $call->getResponse($controller->$method($call->getData(), $this->request->getFiles()));
@@ -99,8 +112,6 @@ class Router
                 $result = $controller->$method(...$call->getData());
                 $result = $call->getResponse($result);
             } catch (\Exception $e) {
-                /** @var string $environment */
-                $environment = $this->container->getParameter('kernel.environment');
                 $result = $call->getException($e, $environment);
             }
         }

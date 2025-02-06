@@ -25,11 +25,22 @@
                  autowire="false"
                  public="false">
 
+            <argument key="$routerFactory" type="service" id="Modera\DirectBundle\Router\RouterFactoryInterface" />
+
             <call method="setContainer">
                 <argument type="service" id="service_container" />
             </call>
 
             <tag name="controller.service_arguments" />
         </service>
+
+        <service id="Modera\DirectBundle\Router\RouterFactory"
+                 autowire="true"
+                 public="false">
+        </service>
+
+        <service id="Modera\DirectBundle\Router\RouterFactoryInterface"
+                 alias="Modera\DirectBundle\Router\RouterFactory"
+        />
     </services>
 </container>

@@ -29,7 +29,7 @@ class Call
     /**
      * The ExtDirect call params.
      *
-     * @var array<string, mixed>
+     * @var array<int|string, mixed>
      */
     protected array $data;
 
@@ -76,7 +76,7 @@ class Call
     /**
      * Get the request method params.
      *
-     * @return array<string, mixed>
+     * @return array<int|string, mixed>
      */
     public function getData(): array
     {
@@ -94,7 +94,7 @@ class Call
      *     'action': string,
      *     'method': string,
      *     'result': array<mixed>
-     *     }
+     *  }
      */
     public function getResponse(array $result): array
     {

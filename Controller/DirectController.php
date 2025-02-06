@@ -3,14 +3,22 @@
 namespace Modera\DirectBundle\Controller;
 
 use Modera\DirectBundle\Api\Api;
-use Modera\DirectBundle\Router\Router;
+use Modera\DirectBundle\Router\RouterFactoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController as Controller;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 class DirectController extends Controller
 {
+    private RouterFactoryInterface $routerFactory;
+
+    public function __construct(RouterFactoryInterface $routerFactory)
+    {
+        $this->routerFactory = $routerFactory;
+    }
+
     protected function getContainer(): ContainerInterface
     {
         /** @var ContainerInterface $container */
@@ -72,10 +80,10 @@ class DirectController extends Controller
     /**
      * Route the ExtDirect calls.
      */
-    public function routeAction(): Response
+    public function routeAction(Request $request): Response
     {
         // instantiate the router object
-        $router = new Router($this->getContainer());
+        $router = $this->routerFactory->create($request);
 
         // create response
         $response = new Response($router->route());
