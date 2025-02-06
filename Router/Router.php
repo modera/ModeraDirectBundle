@@ -48,16 +48,16 @@ class Router
         $this->defaultAccess = $defaultAccess;
         $this->session = $session->get($sessionAttribute);
 
-        $this->request = $this->requestFactory($request);
-        $this->response = $this->responseFactory();
+        $this->request = $this->createRequest($request);
+        $this->response = $this->createResponse();
     }
 
-    protected function requestFactory(SymfonyRequest $request): Request
+    protected function createRequest(SymfonyRequest $request): Request
     {
         return new Request($request);
     }
 
-    protected function responseFactory(): Response
+    protected function createResponse(): Response
     {
         return new Response($this->request->getCallType(), $this->request->isUpload());
     }

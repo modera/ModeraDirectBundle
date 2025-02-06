@@ -115,7 +115,7 @@ class Request
         $calls = [];
 
         if ('form' === $this->callType) {
-            $calls[] = $this->callFactory($this->post);
+            $calls[] = $this->createCall($this->post);
         } else {
             $decoded = \json_decode($this->rawPost);
             $decoded = !\is_array($decoded) ? [$decoded] : $decoded;
@@ -125,7 +125,7 @@ class Request
             // array_walk_recursive($decoded, array($this, 'decode'));
 
             foreach ($decoded as $call) {
-                $calls[] = $this->callFactory((array) $call);
+                $calls[] = $this->createCall((array) $call);
             }
         }
 
@@ -135,7 +135,7 @@ class Request
     /**
      * @param array<mixed> $call
      */
-    protected function callFactory(array $call): Call
+    protected function createCall(array $call): Call
     {
         return new Call($call, $this->callType);
     }
