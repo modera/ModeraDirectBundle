@@ -86,17 +86,17 @@ class Call
     /**
      * Return a result wrapper to ExtDirect method call.
      *
-     * @param array<mixed> $result
+     * @param string|int|float|bool|array<mixed>|object|null $result
      *
      * @return array{
      *     'type': string,
      *     'tid': ?int,
      *     'action': string,
      *     'method': string,
-     *     'result': array<mixed>
+     *     'result': string|int|float|bool|array<mixed>|object|null
      *  }
      */
-    public function getResponse(array $result): array
+    public function getResponse($result): array
     {
         return [
             'type' => 'rpc',
